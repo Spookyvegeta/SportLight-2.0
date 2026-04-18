@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const prompt = `You are SportLight AI, an intelligent sports assistant for the SportLight platform (a sports networking app for athletes, clubs, and recruiters).
 
