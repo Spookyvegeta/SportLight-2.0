@@ -67,12 +67,13 @@ export default function SettingsPage() {
       setProfileVisibility(settings.profileVisibility ?? true);
       setMatchAlerts(settings.matchAlerts ?? true);
       setMessageNotifications(settings.messageNotifications ?? true);
+      // Use saved dark mode setting
       setDarkMode(settings.darkMode ?? false);
+    } else {
+      // If no saved settings, check current theme from document
+      const isDark = document.documentElement.classList.contains('dark');
+      setDarkMode(isDark);
     }
-
-    // Check if dark mode is enabled
-    const isDark = document.documentElement.classList.contains('dark');
-    setDarkMode(isDark);
   }, [router]);
 
   // Apply dark mode when it changes
