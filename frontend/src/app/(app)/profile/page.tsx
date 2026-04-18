@@ -110,8 +110,8 @@ function ProfileSkeleton() {
 }
 
 export default function ProfilePage() {
-  const { players, updatePlayer } = usePlayers();
-  const { clubs, updateClub } = useClubs();
+  const { players, myProfile, updatePlayer } = usePlayers();
+  const { clubs, myClub, updateClub } = useClubs();
   const { toast } = useToast();
   const router = useRouter();
   
@@ -134,6 +134,7 @@ export default function ProfilePage() {
 
   const handleSignOut = () => {
     localStorage.removeItem('userRole');
+    localStorage.removeItem('token');
     router.push('/login');
   };
 
@@ -155,35 +156,33 @@ export default function ProfilePage() {
   });
 
   useEffect(() => {
-    if (role === 'player' && players.length > 0) {
-      const user = players[0];
-      setCurrentUser(user);
+    if (role === 'player' && myProfile) {
+      setCurrentUser(myProfile);
       playerForm.reset({
-        ...user,
-        skills: user.skills.join(', '),
+        ...myProfile,
+        skills: myProfile.skills.join(', '),
       });
-      setPerformanceData(user.performanceData || []);
-      if (user.achievementsImage) {
-        setGeneratedImage(user.achievementsImage);
+      setPerformanceData(myProfile.performanceData || []);
+      if (myProfile.achievementsImage) {
+        setGeneratedImage(myProfile.achievementsImage);
       }
     }
-  }, [role, players, playerForm]);
+  }, [role, myProfile, playerForm]);
 
   useEffect(() => {
-    if (role === 'recruiter' && clubs.length > 0) {
-      const club = clubs[0];
-      setCurrentClub(club);
+    if (role === 'recruiter' && myClub) {
+      setCurrentClub(myClub);
       clubForm.reset({
-        name: club.name,
-        address: club.address,
-        foundationDate: new Date(club.foundationDate),
-        registrationDate: new Date(club.createdAt),
-        contactPerson: club.contactPerson,
-        contactMobile: club.contactMobile,
-        contactEmail: club.contactEmail,
+        name: myClub.name,
+        address: myClub.address,
+        foundationDate: myClub.foundationDate ? new Date(myClub.foundationDate) : undefined,
+        registrationDate: myClub.createdAt ? new Date(myClub.createdAt) : undefined,
+        contactPerson: myClub.contactPerson,
+        contactMobile: myClub.contactMobile,
+        contactEmail: myClub.contactEmail,
       });
     }
-  }, [role, clubs, clubForm]);
+  }, [role, myClub, clubForm]);
 
   async function onPlayerSubmit(values: z.infer<typeof playerFormSchema>) {
     if (!currentUser) return;

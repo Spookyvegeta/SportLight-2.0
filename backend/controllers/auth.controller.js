@@ -6,7 +6,7 @@ import generateToken from "../utils/generateToken.js";
 // Signup
 export const signup = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, sport, age, gender } = req.body;
 
     if (!name || !email || !password || !role) {
       return res.status(400).json({ message: "All fields are required" });
@@ -21,12 +21,19 @@ export const signup = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // Create empty profile based on role
+    // Create profile based on role with initial data
     let profile;
     if (role === "player") {
-      profile = await Player.create({});
+      profile = await Player.create({
+        name: name,
+        sport: sport || 'Football',
+        age: age || 0,
+        gender: gender || 'Male',
+      });
     } else {
-      profile = await Club.create({});
+      profile = await Club.create({
+        name: name,
+      });
     }
 
     const user = await User.create({

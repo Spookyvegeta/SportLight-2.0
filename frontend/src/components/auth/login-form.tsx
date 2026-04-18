@@ -49,8 +49,8 @@ const playerSignupSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   sport: z.enum(ALL_SPORTS),
-  age: z.coerce.number().min(1, "Age is required"),
-  gender: z.enum(["Male", "Female"]),
+  age: z.coerce.number().min(1, "Age must be at least 1").max(120, "Age must be less than 120"),
+  gender: z.enum(["Male", "Female"], { required_error: "Gender is required" }),
 });
 
 const recruiterSignupSchema = z.object({
@@ -69,6 +69,7 @@ export function LoginForm() {
 
   const playerForm = useForm<z.infer<typeof playerSignupSchema>>({
     resolver: zodResolver(playerSignupSchema),
+    mode: "onSubmit",
     defaultValues: {
       name: "",
       email: "",
@@ -81,6 +82,7 @@ export function LoginForm() {
 
   const recruiterForm = useForm<z.infer<typeof recruiterSignupSchema>>({
     resolver: zodResolver(recruiterSignupSchema),
+    mode: "onSubmit",
     defaultValues: {
       recruiterName: "",
       email: "",
@@ -89,81 +91,123 @@ export function LoginForm() {
   });
 
   async function onPlayerSubmit(values: z.infer<typeof playerSignupSchema>) {
-    const newPlayer = {
-      name: values.name,
-      sport: values.sport,
-      age: values.age,
-      gender: values.gender,
-      location: "",
-      mobile: "",
-      height: 0,
-      weight: 0,
-      dreamClub: "",
-      skills: [],
-      achievementsText: "",
-      avatar: `https://picsum.photos/seed/${new Date().toISOString()}/200/200`,
-      verified: false,
-      achievementsImage: `https://picsum.photos/seed/achievement-${new Date().toISOString()}/600/400`,
-      performanceData: [],
-    };
-    
     try {
-        await addPlayer(newPlayer);
-        localStorage.setItem('userRole', 'player');
-        toast({
-          title: "Player Account Created",
-          description: "Welcome! Your basic profile is created. You can add more details on your profile page.",
-        });
-        router.push(`/dashboard`);
-    } catch(e) {
-        console.error(e);
-        toast({
-          variant: "destructive",
-          title: "Error creating profile",
-          description: "There was an issue saving your profile.",
-        });
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: values.name,
+          email: values.email,
+          password: values.password,
+          role: 'player',
+          sport: values.sport,
+          age: values.age,
+          gender: values.gender,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Signup failed');
+      }
+
+      // Store token and role
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userRole', data.role);
+
+      toast({
+        title: "Player Account Created",
+        description: "Welcome! Your account has been created successfully.",
+      });
+      router.push(`/dashboard`);
+    } catch(e: any) {
+      console.error(e);
+      toast({
+        variant: "destructive",
+        title: "Error creating account",
+        description: e.message || "There was an issue creating your account.",
+      });
     }
   }
 
   async function onRecruiterSubmit(values: z.infer<typeof recruiterSignupSchema>) {
     try {
-        await addClub({
-          name: `${values.recruiterName}'s Club`,
-          league: "Premier League",
-          location: "Not Specified",
-          description: "Please update your club profile.",
-          scoutingFocus: [],
-          creatorEmail: values.email,
-        });
-        localStorage.setItem('userRole', 'recruiter');
-        toast({
-          title: "Recruiter Account Created",
-          description: `Welcome, ${values.recruiterName}! You can now complete your club profile.`,
-        });
-        router.push(`/dashboard`);
-    } catch(e) {
-        console.error(e);
-        toast({
-          variant: "destructive",
-          title: "Error creating club profile",
-          description: "There was an issue saving the club profile.",
-        });
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: values.recruiterName,
+          email: values.email,
+          password: values.password,
+          role: 'club',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Signup failed');
+      }
+
+      // Store token and role
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userRole', data.role);
+
+      toast({
+        title: "Recruiter Account Created",
+        description: `Welcome, ${values.recruiterName}! Your account has been created successfully.`,
+      });
+      router.push(`/dashboard`);
+    } catch(e: any) {
+      console.error(e);
+      toast({
+        variant: "destructive",
+        title: "Error creating account",
+        description: e.message || "There was an issue creating your account.",
+      });
     }
   }
 
-  const handleSignIn = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const roleName = role === 'player' ? 'Player' : 'Recruiter';
-    localStorage.setItem('userRole', role);
-    
-    toast({
-      title: `Signed In as ${roleName} Successfully`,
-      description: "Redirecting you...",
-    });
-    
-    setTimeout(() => {
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+
+      // Store token and role
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userRole', data.role);
+
+      const roleName = data.role === 'player' ? 'Player' : 'Club';
+      toast({
+        title: `Signed In as ${roleName} Successfully`,
+        description: "Redirecting you...",
+      });
+
+      setTimeout(() => {
         router.push("/dashboard");
-    }, 1500);
+      }, 1000);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: error.message || "Invalid credentials. Please try again.",
+      });
+    }
   };
 
   return (
@@ -216,6 +260,7 @@ export function LoginForm() {
                 <Label htmlFor="email-signin">Email</Label>
                 <Input
                   id="email-signin"
+                  name="email"
                   type="email"
                   placeholder="m@example.com"
                   required
@@ -223,7 +268,7 @@ export function LoginForm() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password-signin">Password</Label>
-                <Input id="password-signin" type="password" required />
+                <Input id="password-signin" name="password" type="password" required />
               </div>
             </CardContent>
             <CardFooter className="flex-col gap-4">

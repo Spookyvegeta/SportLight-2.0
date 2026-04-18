@@ -39,12 +39,12 @@ const getPerformanceScore = (player: Player): number => {
 
 
 export function PlayerProfileModal({ player, open, onOpenChange }: PlayerProfileModalProps) {
-  const { deletePlayer } = usePlayers();
+  const { deletePlayer, myProfile } = usePlayers();
   
   if (!player) return null;
 
-  // Since auth is removed, anyone can delete. In a real app, this would be protected.
-  const isOwner = true; 
+  // Only show delete button if this is the user's own profile
+  const isOwner = myProfile && player.id === myProfile.id;
   const score = getPerformanceScore(player);
 
 
