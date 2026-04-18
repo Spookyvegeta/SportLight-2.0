@@ -1,61 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export async function POST(request: NextRequest) {
   try {
     const { message } = await request.json();
-
-    // Use Gemini API
+    
+    // Initialize Gemini AI
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyDGXt8W_your_api_key_here';
     
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `You are SportLight AI, a helpful sports assistant for the SportLight app. 
-
-Context: SportLight is a platform connecting athletes with clubs and recruiters. Users can create profiles, showcase achievements, and connect with opportunities.
-
-Your role:
-1. Answer ANY sports-related questions with accurate, concise information
-2. Cover all sports: cricket, football, basketball, tennis, athletics, swimming, boxing, MMA, rugby, hockey, badminton, table tennis, volleyball, baseball, American football, golf, F1, cycling, wrestling, gymnastics, etc.
-3. Provide information about: players, rules, history, records, tournaments, training tips, nutrition, injury prevention
-4. Be precise but friendly
-5. If asked about the app, mention features like profile management, dashboard, settings
-
-User question: ${message}
-
-Provide a helpful, accurate response in 2-4 sentences. Be conversational and engaging.`
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 200,
-          }
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error('Gemini API error');
+    if (!GEMINI_API_KEY || GEMINI_API_KEY === 'AIzaSyDGXt8W_your_api_key_here') {
+      return NextResponse.json({ 
+        response: "⚠️ Gemini API key not configured. Please add your API key to .env.local file. Get it free from: https://makersuite.google.com/app/apikey" 
+      });
     }
 
-    const data = await response.json();
-    const botResponse = data.candidates[0]?.content?.parts[0]?.text || 
-      "I'm here to help with sports questions! Try asking about any sport, player, or training topic.";
+    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
-    return NextResponse.json({ response: botResponse });
-  } catch (error) {
-    console.error('Chat API error:', error);
+    const prompt = `You are SportLight AI, an intelligent sports assistant for the SportLight platform (a sports networking app for athletes, clubs, and recruiters).
+
+Your capabilities:
+- Answer ANY sports-related questions with accurate, up-to-date information
+- Provide training tips, diet plans, workout routines for athletes
+- Explain rules, tactics, and strategies for all sports
+- Discuss players, teams, tournaments, and sports history
+- Give advice on sports careers, recruitment, and professional development
+- Help with app features when asked (profile management, dashboard, settings)
+
+Be conversational, friendly, and concise (2-4 sentences). Use emojis occasionally for engagement.
+
+User question: ${message}`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    return NextResponse.json({ response: text });
     
-    // Fallback response
+  } catch (error: any) {
+    console.error('Gemini API error:', error);
+    
+    // Handle specific errors
+    if (error?.message?.includes('API_KEY_INVALID')) {
+      return NextResponse.json({ 
+        response: "❌ Invalid API key. Please check your Gemini API key in .env.local file." 
+      });
+    }
+    
+    if (error?.message?.includes('RATE_LIMIT')) {
+      return NextResponse.json({ 
+        response: "⏳ Rate limit reached. Please wait a moment and try again." 
+      });
+    }
+    
     return NextResponse.json({ 
-      response: "I'm your sports assistant! Ask me about any sport - cricket, football, basketball, tennis, athletics, or training tips. I'm here to help!" 
+      response: "⚠️ AI service temporarily unavailable. Please ensure your Gemini API key is configured correctly in .env.local" 
     });
   }
 }

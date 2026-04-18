@@ -70,6 +70,19 @@ export const getSportsResponse = (input: string): string | null => {
   if (query.match(/powerplay/)) {
     return "Powerplay - Fielding restrictions in limited-overs cricket. ODI: First 10 overs (2 fielders outside 30-yard circle), overs 11-40 (4 outside), overs 41-50 (5 outside). T20: First 6 overs (2 outside). Designed to encourage aggressive batting.";
   }
+  
+  // Cricket Training & Tips
+  if (query.match(/cricket tip|cricket train|improve.*cricket|batting tip|bowling tip/)) {
+    return "Cricket Training Tips: 1) Batting - Practice straight drives, watch the ball till it hits bat, footwork is key. 2) Bowling - Focus on line & length, practice yorkers, vary pace. 3) Fielding - Practice catching daily, work on agility. 4) Fitness - Build core strength, improve reflexes. 5) Mental game - Stay calm under pressure, visualize success.";
+  }
+  
+  if (query.match(/how to.*bat|batting technique/)) {
+    return "Batting Technique: 1) Grip - V's aligned, relaxed hands. 2) Stance - Balanced, weight on balls of feet, eyes level. 3) Backlift - Straight, towards slips. 4) Head position - Still, eyes on ball. 5) Footwork - Move decisively forward or back. 6) Shot selection - Play according to ball's line & length. Practice regularly!";
+  }
+  
+  if (query.match(/how to.*bowl|bowling technique|fast bowl/)) {
+    return "Bowling Technique: 1) Run-up - Smooth, rhythmic, consistent. 2) Gather - Balanced, side-on position. 3) Delivery stride - Front arm high, back foot parallel. 4) Release - Wrist behind ball, follow through. 5) Line & length - Aim for top of off-stump. 6) Variations - Practice slower balls, bouncers, yorkers. Build core strength!";
+  }
 
   // ============ FOOTBALL/SOCCER ============
   
@@ -78,8 +91,20 @@ export const getSportsResponse = (input: string): string | null => {
     return "Lionel Messi - Arguably the GOAT. 8 Ballon d'Or awards (record). Led Argentina to 2022 World Cup glory. 800+ career goals, 350+ assists. Spent 21 years at Barcelona (35 trophies), now at Inter Miami. Known for dribbling, vision, and left foot magic.";
   }
   
+  if (query.match(/pele|pelé/)) {
+    return "Pelé (1940-2022) - Brazilian legend, widely considered one of the greatest footballers ever. 3 FIFA World Cups (1958, 1962, 1970 - only player with 3). Scored 1,283 goals in 1,363 games. Known for skill, vision, and athleticism. 'The King of Football'. FIFA Player of the Century.";
+  }
+  
+  if (query.match(/maradona|diego/)) {
+    return "Diego Maradona (1960-2020) - Argentine icon, one of football's greatest. Led Argentina to 1986 World Cup with legendary performances. Famous 'Hand of God' and 'Goal of the Century' vs England. Played for Barcelona, Napoli. Known for dribbling genius and controversial personality.";
+  }
+  
   if (query.match(/ronaldo|cristiano|cr7/)) {
     return "Cristiano Ronaldo - 5 Ballon d'Or, 5 Champions League titles. 850+ career goals (all-time top scorer). Played for Man United, Real Madrid, Juventus, Al-Nassr. Known for athleticism, headers, free-kicks, and longevity. Portugal's captain and top scorer.";
+  }
+  
+  if (query.match(/zinedine zidane|zidane/)) {
+    return "Zinedine Zidane - French maestro, 1998 World Cup and Euro 2000 winner. 3 FIFA World Player of the Year awards. Known for elegance, ball control, and vision. Famous headbutt in 2006 WC final. As coach, won 3 consecutive Champions Leagues with Real Madrid.";
   }
   
   if (query.match(/neymar/)) {

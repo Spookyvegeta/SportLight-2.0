@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { getSportsResponse } from "./sports-knowledge";
 
 type Message = {
   role: "user" | "bot";
@@ -63,6 +62,7 @@ export default function ChatBot() {
     setMessages((prev) => [...prev, { role: "user", text: userText }]);
 
     try {
+      // Check for app-specific queries first
       const appResponse = getAppResponse(userText);
       if (appResponse) {
         setTimeout(() => {
@@ -72,6 +72,7 @@ export default function ChatBot() {
         return;
       }
 
+      // Call Gemini AI API for all other queries
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -81,21 +82,21 @@ export default function ChatBot() {
       if (response.ok) {
         const data = await response.json();
         setMessages((prev) => [...prev, { role: "bot", text: data.response }]);
-        setLoading(false);
-        return;
+      } else {
+        setMessages((prev) => [...prev, { 
+          role: "bot", 
+          text: "⚠️ Unable to connect to AI service. Please check your API configuration." 
+        }]);
       }
     } catch (error) {
-      console.log('Using fallback');
-    }
-
-    setTimeout(() => {
-      const sportsAnswer = getSportsResponse(userText);
-      const fallbackResponse = sportsAnswer || 
-        "I can help with sports questions! Ask about cricket, football, basketball, tennis, training tips, or any athlete!";
-      
-      setMessages((prev) => [...prev, { role: "bot", text: fallbackResponse }]);
+      console.error('Chat error:', error);
+      setMessages((prev) => [...prev, { 
+        role: "bot", 
+        text: "⚠️ Connection error. Please ensure the Gemini API key is configured in .env.local file. Get your free key from: https://makersuite.google.com/app/apikey" 
+      }]);
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   const quickActions = [
